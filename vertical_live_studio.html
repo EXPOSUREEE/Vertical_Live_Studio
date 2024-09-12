@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vertical Live Studio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            height: 100vh;
+            padding: 10px;
+            overflow: auto;
+            position: relative;
+            background-color: var(--background-color, #e0f7fa); /* Default background */
+            background-image: var(--background-image, none);
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: var(--container-bg-color, #ffffff);
+            border-radius: 12px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            max-width: 1000px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: var(--heading-color, #00796b);
+        }
+
+        .facecam video {
+            width: 95%;
+            height: 30vh;
+            border-radius: 8px;
+            border: 3px solid var(--video-border-color, #004d40);
+            background-color: #000;
+            object-fit: cover;
+            margin-bottom: 10px;
+        }
+
+        .viewer iframe {
+            width: 100%;
+            height: 250px;
+            border-radius: 8px;
+            border: 3px solid var(--video-border-color, #004d40);
+            background-color: var(--viewer-bg-color, #e0e0e0);
+            object-fit: fill;
+            padding: 0;
+        }
+
+        .facecam, .viewer {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .url-input, .title-input, .theme-selector, .background-input {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 5%;
+        }
+
+        #url, #title {
+            flex-grow: 1;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--input-border-color, #00796b);
+            margin-right: 10px;
+            outline: none;
+        }
+
+        #url:focus, #title:focus {
+            border-color: var(--input-focus-border-color, #004d40);
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+        }
+
+        #loadBtn {
+            padding: 12px 24px;
+            background-color: var(--button-bg-color, #00796b);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        #loadBtn:hover {
+            background-color: var(--button-hover-bg-color, #004d40);
+            transform: scale(1.05);
+        }
+
+        .theme-selector select, .background-input input {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--input-border-color, #00796b);
+            outline: none;
+            background-color: #ffffff;
+            cursor: pointer;
+        }
+
+        .background-input {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 800px; /* Adjust as needed */
+            margin-bottom: 5%;
+        }
+        
+        .background-input label {
+            margin-bottom: 10px;
+            color: var(--label-color);
+        }
+        
+        .background-input input {
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--input-border-color, #00796b);
+            outline: none;
+        }
+        
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            color: var(--footer-color, #00796b);
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Theme styles */
+        .theme-light {
+            --background-color: #e0f7fa;
+            --container-bg-color: #ffffff;
+            --heading-color: #00796b;
+            --video-border-color: #004d40;
+            --viewer-bg-color: #e0e0e0;
+            --input-border-color: #00796b;
+            --input-focus-border-color: #004d40;
+            --button-bg-color: #00796b;
+            --button-hover-bg-color: #004d40;
+            --footer-color: #00796b;
+            --label-color: #00796b; 
+        }
+
+        .theme-blue {
+            --background-color: #bbdefb;
+            --container-bg-color: #e3f2fd;
+            --heading-color: #0d47a1;
+            --video-border-color: #1565c0;
+            --viewer-bg-color: #90caf9;
+            --input-border-color: #0d47a1;
+            --input-focus-border-color: #1565c0;
+            --button-bg-color: #1565c0;
+            --button-hover-bg-color: #0d47a1;
+            --footer-color: #0d47a1;
+            --label-color: #0d47a1;
+        }
+
+        .theme-green {
+            --background-color: #e8f5e9;
+            --container-bg-color: #c8e6c9;
+            --heading-color: #2e7d32;
+            --video-border-color: #388e3c;
+            --viewer-bg-color: #a5d6a7;
+            --input-border-color: #2e7d32;
+            --input-focus-border-color: #388e3c;
+            --button-bg-color: #388e3c;
+            --button-hover-bg-color: #2e7d32;
+            --footer-color: #2e7d32;
+            --label-color: #2e7d32; 
+        }
+
+        .theme-red {
+            --background-color: #ffebee;
+            --container-bg-color: #ffcdd2;
+            --heading-color: #b71c1c;
+            --video-border-color: #d32f2f;
+            --viewer-bg-color: #ef9a9a;
+            --input-border-color: #b71c1c;
+            --input-focus-border-color: #d32f2f;
+            --button-bg-color: #d32f2f;
+            --button-hover-bg-color: #b71c1c;
+            --footer-color: #b71c1c;
+            --label-color: #b71c1c;
+        }
+
+        .theme-dark {
+            --background-color: #263238;
+            --container-bg-color: #37474f;
+            --heading-color: #eceff1;
+            --video-border-color: #455a64;
+            --viewer-bg-color: #546e7a;
+            --input-border-color: #90a4ae;
+            --input-focus-border-color: #b0bec5;
+            --button-bg-color: #455a64;
+            --button-hover-bg-color: #263238;
+            --footer-color: #eceff1;
+            --label-color: #eceff1;
+        }
+
+        label {
+            color: var(--label-color);
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        
+        .facecam-toggle {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .facecam-toggle label {
+            color: var(--label-color);
+            margin-right: 10px;
+        }
+        
+    </style>
+</head>
+<body class="theme-light">
+
+    <div class="container">
+        <div class="theme-selector" id="theme-selector">
+            <label for="theme-select">Choose a theme:</label>
+            <select id="theme-select">
+                <option value="theme-light">Light Theme</option>
+                <option value="theme-blue">Blue Theme</option>
+                <option value="theme-green">Green Theme</option>
+                <option value="theme-red">Red Theme</option>
+                <option value="theme-dark">Dark Theme</option>
+            </select>
+        </div>
+
+        <div class="background-input" id="background-input">
+            <label for="backgroundInput">Choose a background image:</label>
+            <input type="file" id="backgroundInput" accept="image/*">
+        </div>
+
+        <div class="intro">
+            <h1 id="heading">Vertical Live Studio</h1>
+            <div class="title-input">
+                <input type="text" id="title" placeholder="Your Channel Name">
+            </div>
+            <div class="url-input">
+                <input type="text" id="url" placeholder="Enter Screen Mirroring URL">
+                <button id="loadBtn">Load</button>
+            </div>
+        </div>
+
+        <div class="facecam-toggle">
+            <label for="facecam-toggle">Show Facecam:</label>
+            <input type="checkbox" id="facecam-toggle" checked>
+        </div>
+
+        <div class="facecam">
+            <video id="facecam" autoplay></video>
+        </div>
+
+        <div class="viewer">
+            <iframe id="ipCamViewer" src="" frameborder="0"></iframe>
+        </div>
+    </div>
+
+    <div class="footer">
+        Vertical Live Studio
+    </div>
+
+    <script>
+        async function initializeCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                document.getElementById('facecam').srcObject = stream;
+            } catch (error) {
+                console.error('Error accessing webcam:', error);
+                alert('Failed to access the camera.');
+            }
+        }
+
+        function loadViewer() {
+            const url = document.getElementById('url').value;
+            const title = document.getElementById('title').value;
+            const viewer = document.getElementById('ipCamViewer');
+            const heading = document.getElementById('heading');
+
+            if (url && title) {
+                viewer.src = url;
+                heading.textContent = title;
+
+                // Hide the input fields and theme/background options
+                document.querySelector('.title-input').classList.add('hidden');
+                document.querySelector('.url-input').classList.add('hidden');
+                document.getElementById('theme-selector').classList.add('hidden');
+                document.getElementById('background-input').classList.add('hidden');
+                document.querySelector('.facecam-toggle').classList.add('hidden');
+                document.getElementById('loadBtn').classList.add('hidden');
+            } else {
+                alert('Please enter both a title and a URL.');
+            }
+        }
+
+        document.getElementById('loadBtn').addEventListener('click', loadViewer);
+
+        document.getElementById('theme-select').addEventListener('change', function() {
+            document.body.className = this.value;
+        });
+
+        document.getElementById('backgroundInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.body.style.setProperty('--background-image', `url(${e.target.result})`);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('facecam-toggle').addEventListener('change', function() {
+            const facecam = document.querySelector('.facecam');
+            if (this.checked) {
+                facecam.classList.remove('hidden');
+            } else {
+                facecam.classList.add('hidden');
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', initializeCamera);
+    </script>
+</body>
+</html>
